@@ -13,7 +13,7 @@ cursor = connection.cursor()
 
 # 开始循环
 for i in range(1024):
-    delete = f"DELETE FROM win_betslips_{i} WHERE id > 69999 and id < 130001;"
+    delete = f"DELETE FROM win_betslips_{i} WHERE id <=150001 and id >= 103000;"
     print(cursor.execute(delete))
-connection.commit()
+    connection.commit()
 connection.close()
