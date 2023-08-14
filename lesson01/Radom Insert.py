@@ -25,7 +25,7 @@ db_config = {
 }
 
 
-# @timer
+@timer
 def add_test_data():
     # 打开连接
     connection = pymysql.connect(**db_config)
