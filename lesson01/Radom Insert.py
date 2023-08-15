@@ -33,7 +33,7 @@ def add_test_data():
 
     # 定义字段
     num_entries = 3
-    table_id = 200000
+    table_id = 200004
     xb_status = 1
     xb_uid = 23552
     xb_username = '"orange86"'
