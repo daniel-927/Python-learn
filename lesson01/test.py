@@ -33,17 +33,19 @@ def add_test_data():
 
 
     # 开始循环查询
-
+    resultsss = 0
     for i in range(1024):
-        sql = f'delete  FROM win_betslips_{i} WHERE id <=150000 ;'
+        sql = f'select count(*)  FROM win_betslips_{i} ;'
         try:
             cursor.execute(sql)
             connection.commit()
-            #results = cursor.fetchmany(5)
-            #print(results)
+            results = cursor.fetchmany(1)
+            results = int(results[0][0])
+            resultsss += results
+            print(resultsss)
         except Exception as e:
             print(e)
-
+    print(resultsss)
     connection.close()
 
 
