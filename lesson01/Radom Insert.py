@@ -33,7 +33,7 @@ def add_test_data():
 
     # 定义字段
     num_entries = 3
-    table_id = 200004
+    table_id = 0
     xb_status = 1
     xb_uid = 23552
     xb_username = '"orange86"'
@@ -63,6 +63,7 @@ def add_test_data():
         xb_profit = f"{random.randint(1, 1000)}"
 
         for i in range(1024):
+            table_id += 1
             values24 = [({table_id}, {round_id}, {transaction_id}, {xb_status}, {xb_uid}, {xb_username}, {xb_profit},
                          {stake}, {valid_stake}, {payout}, {coin_refund}, {coin_before}, {game_provider_subtype_id},
                          {game_list_id}, {game_pagcor_id}, {game_type_id}, {game_provider_id}, {amount_type},
