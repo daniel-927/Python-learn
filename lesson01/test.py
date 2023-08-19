@@ -35,11 +35,12 @@ def add_test_data():
     # 开始循环查询
     # resultsss = 0
     for i in range(1024):
-        sql = f"ALTER TABLE win_betslips_{i} ADD COLUMN `merchant_id` int NOT NULL default 0 COMMENT '商户id' AFTER xb_username;"
+        #sql = f"ALTER TABLE win_betslips_{i} ADD COLUMN `merchant_id` int NOT NULL default 0 COMMENT '商户id' AFTER xb_username;"
+        sql = f"delete from win_betslips_{i} where id <3000;"
         try:
             cursor.execute(sql)
             connection.commit()
-            print(i)
+            # print(i)
             # results = cursor.fetchmany(1)
             # results = int(results[0][0])
             # resultsss += results
