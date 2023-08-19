@@ -47,7 +47,6 @@ def add_test_data():
     game_list_id = 13581
     game_pagcor_id = 1
     game_type_id = 2
-    game_provider_id = 6
     amount_type = 1
     dt_started = 1691400658
     dt_completed = 1691400658
@@ -60,24 +59,26 @@ def add_test_data():
     for i in range(1024):
         sql_data = []
         for num_id in range(num_entries):
-
             table_id += 1
             round_id = f"{random.randint(1, 100000000)}"
             transaction_id = f"{random.randint(1, 100000000)}"
             xb_profit = f"{random.randint(1, 1000)}"
+            game_provider_id = f"{random.randint(1, 10)}"
 
             values24 = ({table_id}, {round_id}, {transaction_id}, {xb_status}, {xb_uid}, {xb_username}, {xb_profit},
-                         {stake}, {valid_stake}, {payout}, {coin_refund}, {coin_before}, {game_provider_subtype_id},
-                         {game_list_id}, {game_pagcor_id}, {game_type_id}, {game_provider_id}, {amount_type},
-                         {dt_started},
-                         {dt_completed}, {win_transaction_id}, {create_time_str}, {created_at}, {updated_at})
+                        {stake}, {valid_stake}, {payout}, {coin_refund}, {coin_before}, {game_provider_subtype_id},
+                        {game_list_id}, {game_pagcor_id}, {game_type_id}, {game_provider_id}, {amount_type},
+                        {dt_started},
+                        {dt_completed}, {win_transaction_id}, {create_time_str}, {created_at}, {updated_at})
 
             sql_data.append(values24)
 
         try:
-            #cursor.execute(f'show databases;')
+            # cursor.execute(f'show databases;')
 
-            cursor.executemany(f'insert into win_betslips_{i} (id,round_id,transaction_id,xb_status,xb_uid,xb_username,xb_profit,stake,valid_stake,payout,coin_refund,coin_before,game_provider_subtype_id,game_list_id,game_pagcor_id,game_type_id,game_provider_id,amount_type,dt_started,dt_completed,win_transaction_id,create_time_str,created_at,updated_at) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',sql_data)
+            cursor.executemany(
+                f'insert into win_betslips_{i} (id,round_id,transaction_id,xb_status,xb_uid,xb_username,xb_profit,stake,valid_stake,payout,coin_refund,coin_before,game_provider_subtype_id,game_list_id,game_pagcor_id,game_type_id,game_provider_id,amount_type,dt_started,dt_completed,win_transaction_id,create_time_str,created_at,updated_at) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
+                sql_data)
         except Exception as e:
             print(e)
         connection.commit()
