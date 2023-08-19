@@ -1,6 +1,6 @@
 import random
 import time
-
+import pysnooper
 import pymysql
 import pymysql.cursors
 
@@ -26,13 +26,14 @@ db_config = {
 
 
 @timer
+@pysnooper.snoop()
 def add_test_data():
     # 打开连接
     connection = pymysql.connect(**db_config)
     cursor = connection.cursor()
 
     # 定义字段
-    num_entries = 3
+    num_entries = 1
     table_id = 0
     xb_status = 1
     xb_uid = 23552
@@ -64,13 +65,14 @@ def add_test_data():
 
         for i in range(1024):
             table_id += 1
-            values24 = [({table_id}, {round_id}, {transaction_id}, {xb_status}, {xb_uid}, {xb_username}, {xb_profit},
-                         {stake}, {valid_stake}, {payout}, {coin_refund}, {coin_before}, {game_provider_subtype_id},
-                         {game_list_id}, {game_pagcor_id}, {game_type_id}, {game_provider_id}, {amount_type},
-                         {dt_started},
-                         {dt_completed}, {win_transaction_id}, {create_time_str}, {created_at}, {updated_at})]
+            # values24 = [({table_id}, {round_id}, {transaction_id}, {xb_status}, {xb_uid}, {xb_username}, {xb_profit},
+            #              {stake}, {valid_stake}, {payout}, {coin_refund}, {coin_before}, {game_provider_subtype_id},
+            #              {game_list_id}, {game_pagcor_id}, {game_type_id}, {game_provider_id}, {amount_type},
+            #              {dt_started},
+            #              {dt_completed}, {win_transaction_id}, {create_time_str}, {created_at}, {updated_at})]
             try:
-                cursor.executemany(f'insert into win_betslips_{i} (id,round_id,transaction_id,xb_status,xb_uid,xb_username,xb_profit,stake,valid_stake,payout,coin_refund,coin_before,game_provider_subtype_id,game_list_id,game_pagcor_id,game_type_id,game_provider_id,amount_type,dt_started,dt_completed,win_transaction_id,create_time_str,created_at,updated_at) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',values24)
+                cursor.execute(f'show databases;')
+                #cursor.executemany(f'insert into win_betslips_{i} (id,round_id,transaction_id,xb_status,xb_uid,xb_username,xb_profit,stake,valid_stake,payout,coin_refund,coin_before,game_provider_subtype_id,game_list_id,game_pagcor_id,game_type_id,game_provider_id,amount_type,dt_started,dt_completed,win_transaction_id,create_time_str,created_at,updated_at) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',values24)
             except Exception as e:
                 print(e)
         connection.commit()
