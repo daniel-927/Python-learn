@@ -1,3 +1,6 @@
+
+# author:  Daniel
+# date :  2023.8.18
 import random
 import time
 import pysnooper
@@ -18,10 +21,10 @@ def timer(func):
 
 
 db_config = {
-    "host": "backup-filbet-cluster-pro-cluster.cluster-ccqwmbdaqtea.ap-east-1.rds.amazonaws.com",
+    "host": "filbet-zi-dev-aurora-cluster.cluster-c0mmrepgi1ky.us-west-2.rds.amazonaws.com",
+    "port": 3306,
     "user": "admin",
-    "port": 3307,
-    "password": "QoW2Dj6CQtYd8vrgWxBg",
+    "password": "WATNfBJYaZ4FPVVzdYCq",
     "database": "filbet"
 }
 
@@ -33,22 +36,23 @@ def add_test_data():
     connection = pymysql.connect(**db_config)
     cursor = connection.cursor()
 
+
+
     # 获取总行数
-    totalrows_sql = f'SELECT COUNT(1)  FROM 1_win_betslips WHERE game_list_id = 0;'
+    totalrows_sql = f'SELECT COUNT(1)  FROM 0_win_betslips WHERE game_list_id = 0;'
     cursor.execute(totalrows_sql)
     totalrows = cursor.fetchmany(1)
     totalrows = int(totalrows[0][0])
 
     # 开始循环查询
+    count1 = 1
     while totalrows > 0:
-        count1 = 1
         try:
             temprows = 20000
-            sql = f'UPDATE 1_win_betslips a	JOIN (SELECT id FROM 1_win_betslips WHERE game_list_id = 0 LIMIT 20000) c ON a.id = c.id LEFT JOIN game_list b ON a.game_type_id = b.code AND a.game_plat_id = b.game_provider_id AND a.game_id = b.game_provider_subtype_id  SET a.game_list_id = b.id, a.game_provider_id = b.game_provider_id, a.game_pagcor_id = b.game_pagcor_id, a.game_provider_subtype_id = b.game_provider_subtype_id  WHERE a.game_list_id=0; '
+            sql = f'UPDATE 0_win_betslips a	JOIN (SELECT id FROM 0_win_betslips WHERE game_list_id = 0 LIMIT 20000) c ON a.id = c.id LEFT JOIN game_list b ON a.game_type_id = b.code AND a.game_plat_id = b.game_provider_id AND a.game_id = b.game_provider_subtype_id  SET a.game_list_id = b.id, a.game_provider_id = b.game_provider_id, a.game_pagcor_id = b.game_pagcor_id, a.game_provider_subtype_id = b.game_provider_subtype_id,a.game_group_id=b.game_type_id  WHERE a.game_list_id=0; '
             cursor.execute(sql)
             totalrows = totalrows - temprows
             connection.commit()
-
 
         except Exception as e:
             print(e)
@@ -57,3 +61,7 @@ def add_test_data():
 
 
 add_test_data()
+
+
+
+

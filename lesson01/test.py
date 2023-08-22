@@ -34,9 +34,12 @@ def add_test_data():
 
     # 开始循环查询
     # resultsss = 0
-    for i in range(1024):
+    for i in range(1):
+        #sql = f"ALTER TABLE win_coin_log_{i} ADD COLUMN `merchant_id` int NOT NULL default 0 COMMENT '商户id' AFTER username;"
         #sql = f"ALTER TABLE win_betslips_{i} ADD COLUMN `merchant_id` int NOT NULL default 0 COMMENT '商户id' AFTER xb_username;"
-        sql = f"delete from win_betslips_{i} where id <3000;"
+        #sql = f"delete from win_betslips_{i} where id <3000;"
+        #sql = f"drop table win_coin_log_{i}"
+        sql = f"show databases;"
         try:
             cursor.execute(sql)
             connection.commit()
