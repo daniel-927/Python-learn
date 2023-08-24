@@ -18,10 +18,10 @@ def timer(func):
 
 
 db_config = {
-    "host": "filbet-zi-dev-aurora-cluster.cluster-c0mmrepgi1ky.us-west-2.rds.amazonaws.com",
-    "user": "admin",
-    "password": "WATNfBJYaZ4FPVVzdYCq",
-    "database": "filbet_sharding"
+    "host": "",
+    "user": "",
+    "password": "",
+    "database": ""
 }
 
 
@@ -33,24 +33,23 @@ def add_test_data():
     cursor = connection.cursor()
 
     # 开始循环查询
-    # resultsss = 0
-    for i in range(1):
+    # results = 0
+    for i in range(1024):
         #sql = f"ALTER TABLE win_coin_log_{i} ADD COLUMN `merchant_id` int NOT NULL default 0 COMMENT '商户id' AFTER username;"
         #sql = f"ALTER TABLE win_betslips_{i} ADD COLUMN `merchant_id` int NOT NULL default 0 COMMENT '商户id' AFTER xb_username;"
         #sql = f"delete from win_betslips_{i} where id <3000;"
-        #sql = f"drop table win_coin_log_{i}"
+        #sql = f"truncate win_coin_log_{i}"
         sql = f"show databases;"
         try:
             cursor.execute(sql)
             connection.commit()
-            # print(i)
-            # results = cursor.fetchmany(1)
-            # results = int(results[0][0])
-            # resultsss += results
-            # print(resultsss)
+            # result = cursor.fetchmany(1)
+            # result = int(results[0][0])
+            # results += result
+            # print(results)
         except Exception as e:
             print(e)
-    # print(resultsss)
+    # print(results)
     connection.close()
 
 
