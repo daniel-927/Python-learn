@@ -1,4 +1,3 @@
-
 # author:  Daniel
 # date :  2023.8.18
 import random
@@ -36,8 +35,6 @@ def add_test_data():
     connection = pymysql.connect(**db_config)
     cursor = connection.cursor()
 
-
-
     # 获取总行数
     totalrows_sql = f'SELECT COUNT(1)  FROM 0_win_betslips WHERE game_list_id = 0;'
     cursor.execute(totalrows_sql)
@@ -61,7 +58,3 @@ def add_test_data():
 
 
 add_test_data()
-
-
-
-

@@ -45,7 +45,7 @@ date_str = "p" + year_str + month_str + day_str
 for tbs in tables_list:
     # 执行添加表分区的操作
     sql = f'use test_p3; ALTER TABLE {tbs} ADD PARTITION {date_str} values less than ("{next_week_timestamp}");'
-    #print(sql)
+    # print(sql)
     print(next_week)
     print(next_week_timestamp)
     # cmd = f"mysql -h10.170.0.26 -uroot -P9030 -e '{sql}'"

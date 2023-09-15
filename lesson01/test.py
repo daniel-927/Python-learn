@@ -18,9 +18,10 @@ def timer(func):
 
 
 db_config = {
-    "host": "filbet-zi-dev-aurora-cluster.cluster-c0mmrepgi1ky.us-west-2.rds.amazonaws.com",
-    "user": "admin",
-    "password": "WATNfBJYaZ4FPVVzdYCq",
+    "host": "52.35.86.227",
+    "port": 9030,
+    "user": "root",
+    "password": "sr@123",
     "database": "filbet_dev_sharding"
 }
 
@@ -35,10 +36,9 @@ def add_test_data():
     # 开始循环查询
     # results = 0
     for i in range(1024):
-        #sql = f"ALTER TABLE win_coin_log_{i} ADD COLUMN `merchant_id` int NOT NULL default 0 COMMENT '商户id' AFTER username;"
-        #sql = f"ALTER TABLE win_betslips_{i} ADD COLUMN `merchant_id` int NOT NULL default 0 COMMENT '商户id' AFTER xb_username;"
-        #sql = f"delete from win_betslips_{i} where id <3000;"
-        #sql = f"truncate win_betslips_details_{i}"
+        # sql = f"ALTER TABLE win_coin_log_{i} ADD COLUMN `merchant_id` int NOT NULL default 0 COMMENT '商户id' AFTER username;"
+        # sql = f"ALTER TABLE win_betslips_{i} ADD COLUMN `merchant_id` int NOT NULL default 0 COMMENT '商户id' AFTER xb_username;"
+        # sql = f"truncate win_betslips_details_{i}"
         sql = f"show databases;"
         try:
             cursor.execute(sql)

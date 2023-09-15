@@ -3,7 +3,8 @@
 # Author        : Daniel
 # Date          : 2023-09-07
 import pymysql
-#import pysnooper
+import pysnooper
+
 
 # 获得表结构
 def get_table_structure(cursor, table_name):
@@ -13,6 +14,7 @@ def get_table_structure(cursor, table_name):
     except pymysql.Error as e:
         print(f"Error: {e}")
         return None
+
 
 # 对比表结构
 def compare_table_structures(cursor1, cursor2, table_name):
@@ -24,8 +26,9 @@ def compare_table_structures(cursor1, cursor2, table_name):
     else:
         print(f"\033[91mTable {table_name} structures are different.\033[0m")
 
+
 # 获取对比库的表数量并进行对比
-#@pysnooper.snoop()
+@pysnooper.snoop()
 def compare_databases_structure(conn1, conn2):
     try:
         # 打开游标
@@ -44,7 +47,6 @@ def compare_databases_structure(conn1, conn2):
 
         cursor2.execute("SHOW TABLES")
         tables2 = [table[0] for table in cursor2.fetchall()]
-
 
         # 获取差异的数据表
         difference_tables1 = set(tables1) - set(tables2)
