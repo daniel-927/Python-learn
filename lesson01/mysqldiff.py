@@ -28,7 +28,7 @@ def compare_table_structures(cursor1, cursor2, table_name):
 
 
 # 获取对比库的表数量并进行对比
-@pysnooper.snoop()
+# @pysnooper.snoop()
 def compare_databases_structure(conn1, conn2):
     try:
         # 打开游标
