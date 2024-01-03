@@ -32,17 +32,19 @@ def add_test_data():
     # 打开连接
     connection = pymysql.connect(**db_config)
     cursor = connection.cursor()
-
+    tables = f"show tables;"
+    cursor.execute(tables)
+    result = cursor.fetchall()
     # 开始循环查询
     # results = 0
-    for i in range(1024):
+    for table in result:
         # sql = f"ALTER TABLE win_coin_log_{i} ADD COLUMN `merchant_id` int NOT NULL default 0 COMMENT '商户id' AFTER username;"
         # sql = f"ALTER TABLE win_betslips_{i} ADD COLUMN `merchant_id` int NOT NULL default 0 COMMENT '商户id' AFTER xb_username;"
         # sql = f"truncate win_betslips_details_{i}"
-        sql = f"show databases;"
         try:
+            sql = f"desc {table[0]};"
             cursor.execute(sql)
-            connection.commit()
+            print(cursor.fetchall())
             # result = cursor.fetchmany(1)
             # result = int(results[0][0])
             # results += result
