@@ -1,6 +1,7 @@
-# author:  Daniel
-# date :  2023.8.18
-import random
+# /usr/bin/python3
+
+# Author        : Daniel
+# Date          : 2023-08-30
 import time
 import pysnooper
 import pymysql

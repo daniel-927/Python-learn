@@ -31,6 +31,9 @@ def dump_user():
         # 获取代理下的会员
         for agent_result in agents_result:
             sql2 = 'select id  from win_user where sup_uid_1="{}" AND role=0;'.format(agent_result[0])
+            sql3 = f'select id  from win_user where sup_uid_1="{agent_result[0]}" AND role=0;'
+            print(sql2)
+            print(sql3)
             members_sql = cursor1
             members_sql.execute(sql2)
             members_result = members_sql.fetchall()

@@ -1,4 +1,8 @@
-import random
+# /usr/bin/python3
+
+# Author        : Daniel
+# Date          : 2024-01-04
+
 import time
 import pysnooper
 import pymysql

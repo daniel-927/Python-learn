@@ -1,3 +1,7 @@
+# /usr/bin/python3
+
+# Author        : Daniel
+# Date          : 2023-08-30
 import random
 import time
 import pysnooper

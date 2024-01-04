@@ -1,5 +1,7 @@
-#!/bin/python3
+# /usr/bin/python3
 
+# Author        : Daniel
+# Date          : 2023-05-30
 import datetime
 import subprocess
 
