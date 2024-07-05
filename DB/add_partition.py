@@ -5,50 +5,87 @@
 import datetime
 import subprocess
 
-# 每周一凌晨12点定时执行即可
+
+# 每天定时执行即可
 
 tables_list = [
-    'tbl_game_record',
-    'tbl_game_record_qp',
-    'tbl_game_record_ty',
-    'tbl_game_record_zr',
-    'tbl_game_record_fc',
-    'tbl_game_record_dz',
-    'tbl_game_record_es',
-    'tbl_game_record_mini',
-    'tbl_game_record_fish',
-    'tbl_balance_transaction'
+    'tab_financialchess',
+    'tab_financialelectronic',
+    'tab_financialelectronic_jili',
+    'tab_financialelectronic_pg',
+    'tab_financialelectronic_pp',
+    'tab_financialelectronic_spribe',
+    'tab_financialelectronic_tb',
+    'tab_financiallottery_5d',
+    'tab_financiallottery_k3',
+    'tab_financiallottery_trxwingo',
+    'tab_financiallottery_wingo',
+    'tab_financialsport',
+    'tab_financialtenant',
+    'tab_financialvideo',
+    'tab_gameusers',
+    'tab_orderchess',
+    'tab_orderelectronic',
+    'tab_orderelectronic_jili',
+    'tab_orderelectronic_pg',
+    'tab_orderelectronic_pp',
+    'tab_orderelectronic_spribe',
+    'tab_orderelectronic_tb',
+    'tab_orderlottery_5d',
+    'tab_orderlottery_k3',
+    'tab_orderlottery_trxwingo',
+    'tab_orderlottery_wingo',
+    'tab_ordersport',
+    'tab_ordervideo',
+    'tab_tenanttransfer'
 ]
 
 # 获取当前日期和时间
 current_date = datetime.datetime.now()
 
-# 计算下一个周一的日期
-days_ahead = (0 - current_date.weekday() + 1) % 7
-next_monday = current_date + datetime.timedelta(days=days_ahead)
+# 计算七天后的日期
+next_week = current_date + datetime.timedelta(days=7)
 
-# 设置每周一凌晨1点的时间
+# 计算30天前的日期
+last_30_days = current_date - datetime.timedelta(days=30)
+
+# 设置每天凌晨1点的时间
 target_time = datetime.time(1, 0, 0)
 
 # 组合日期和时间
-target_datetime = datetime.datetime.combine(next_monday.date(), target_time)
+next_target_datetime = datetime.datetime.combine(next_week.date(), target_time)
+last_target_datetime = datetime.datetime.combine(last_30_days.date(), target_time)
 
-# 下周时间戳
-next_week = target_datetime + datetime.timedelta(weeks=1)
-next_week_timestamp = int(next_week.timestamp() * 1000)
+# 七天后的时间戳
+next_week_timestamp = int(next_target_datetime.timestamp() * 1000)
 
-# 获取下一个周一的年、月、日
-year_str = str(next_monday.year)
-month_str = str(next_monday.month).zfill(2)
-day_str = str(next_monday.day).zfill(2)
+# 30天前的时间戳
+last_30_days_timestamp = int(last_target_datetime.timestamp() * 1000)
 
-date_str = "p" + year_str + month_str + day_str
+# 获取七天后的日期的年、月、日
+year_str_next = str(next_week.year)
+month_str_next = str(next_week.month).zfill(2)
+day_str_next = str(next_week.day).zfill(2)
+
+date_str_next = "p" + year_str_next + month_str_next + day_str_next
+
+# 获取30天前的日期的年、月、日
+year_str_last = str(last_30_days.year)
+month_str_last = str(last_30_days.month).zfill(2)
+day_str_last = str(last_30_days.day).zfill(2)
+
+date_str_last = "p" + year_str_last + month_str_last + day_str_last
 
 for tbs in tables_list:
-    # 执行添加表分区的操作
-    sql = f'use test_p3; ALTER TABLE {tbs} ADD PARTITION {date_str} values less than ("{next_week_timestamp}");'
-    # print(sql)
-    print(next_week)
-    print(next_week_timestamp)
-    # cmd = f"mysql -h10.170.0.26 -uroot -P9030 -e '{sql}'"
-    # subprocess.run(cmd, shell=True, check=True)
+    # 删除30天前的分区
+    sql_drop = f'use tenant_1001;ALTER TABLE {tbs} DROP PARTITION {date_str_last}'
+    cmd_drop = f"mysql -har0607.rwlb.singapore.rds.aliyuncs.com -uives -pCssl#123 -e '{sql_drop}'"
+    subprocess.run(cmd_drop, shell=True, check=True)
+
+    # 添加七天后的分区
+    sql_add = f'use tenant_1001;ALTER TABLE {tbs} ADD PARTITION (partition {date_str_next} values less than ({next_week_timestamp}))'
+    cmd_add = f"mysql -har0607.rwlb.singapore.rds.aliyuncs.com -uives -pCssl#123 -e '{sql_add}'"
+    subprocess.run(cmd_add, shell=True, check=True)
+
+    print(f"Updated partitions for table {tbs}: Added {date_str_next}, Removed {date_str_last}")
+
