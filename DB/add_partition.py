@@ -8,38 +8,13 @@ import subprocess
 
 # 每天定时执行即可
 db_list = [
-    'tenant_1001'
+    'tenant_1001',
+    'tenant_1002'
 ]
 
 tables_list = [
     'tab_financialchess',
     'tab_financialelectronic',
-    'tab_financialelectronic_jili',
-    'tab_financialelectronic_pg',
-    'tab_financialelectronic_pp',
-    'tab_financialelectronic_spribe',
-    'tab_financialelectronic_tb',
-    'tab_financiallottery_5d',
-    'tab_financiallottery_k3',
-    'tab_financiallottery_trxwingo',
-    'tab_financiallottery_wingo',
-    'tab_financialsport',
-    'tab_financialtenant',
-    'tab_financialvideo',
-    'tab_gameusers',
-    'tab_orderchess',
-    'tab_orderelectronic',
-    'tab_orderelectronic_jili',
-    'tab_orderelectronic_pg',
-    'tab_orderelectronic_pp',
-    'tab_orderelectronic_spribe',
-    'tab_orderelectronic_tb',
-    'tab_orderlottery_5d',
-    'tab_orderlottery_k3',
-    'tab_orderlottery_trxwingo',
-    'tab_orderlottery_wingo',
-    'tab_ordersport',
-    'tab_ordervideo',
     'tab_tenanttransfer'
 ]
 
@@ -47,7 +22,7 @@ tables_list = [
 current_date = datetime.datetime.now()
 
 
-
+# 循环递增7天 (即新增7天后的7-14天分区,删除30天前的30-37天分区)
 for i in range(8):
 
 
