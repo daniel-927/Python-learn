@@ -8,13 +8,44 @@ import subprocess
 
 # 每天定时执行即可
 db_list = [
-    'tenant_1001',
-    'tenant_1002'
+    'tenant_1001'
 ]
 
+# DB连接信息
+db_host = "ar0607.rwlb.singapore.rds.aliyuncs.com"
+db_user = "ives"
+db_pwd = "Cssl#123"
+
+# 分区表列表
 tables_list = [
     'tab_financialchess',
     'tab_financialelectronic',
+    'tab_financialelectronic_jili',
+    'tab_financialelectronic_pg',
+    'tab_financialelectronic_pp',
+    'tab_financialelectronic_spribe',
+    'tab_financialelectronic_tb',
+    'tab_financiallottery_5d',
+    'tab_financiallottery_k3',
+    'tab_financiallottery_trxwingo',
+    'tab_financiallottery_wingo',
+    'tab_financialsport',
+    'tab_financialtenant',
+    'tab_financialvideo',
+    'tab_gameusers',
+    'tab_orderchess',
+    'tab_orderelectronic',
+    'tab_orderelectronic_jili',
+    'tab_orderelectronic_pg',
+    'tab_orderelectronic_pp',
+    'tab_orderelectronic_spribe',
+    'tab_orderelectronic_tb',
+    'tab_orderlottery_5d',
+    'tab_orderlottery_k3',
+    'tab_orderlottery_trxwingo',
+    'tab_orderlottery_wingo',
+    'tab_ordersport',
+    'tab_ordervideo',
     'tab_tenanttransfer'
 ]
 
@@ -62,13 +93,13 @@ for i in range(8):
         for tbs in tables_list:
             # 检查是否存在要删除的分区
             check_drop_exists = f"SELECT 1 FROM information_schema.partitions WHERE table_schema = '{dbs}' AND table_name = '{tbs}' AND partition_name = '{date_str_last}'"
-            cmd_check_drop_exists = f"mysql -har0607.rwlb.singapore.rds.aliyuncs.com -uives -pCssl#123 -e \"{check_drop_exists}\""
+            cmd_check_drop_exists = f"mysql -h{db_host} -u{db_user} -p{db_pwd} -e \"{check_drop_exists}\""
             result_drop_exists = subprocess.run(cmd_check_drop_exists, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
             if "1" in result_drop_exists.stdout.decode('utf-8'):
                 # 删除30天前的分区
                 sql_drop = f'use {dbs};ALTER TABLE {tbs} DROP PARTITION {date_str_last}'
-                cmd_drop = f"mysql -har0607.rwlb.singapore.rds.aliyuncs.com -uives -pCssl#123 -e '{sql_drop}'"
+                cmd_drop = f"mysql -h{db_host}  -u{db_user} -p{db_pwd} -e '{sql_drop}'"
                 subprocess.run(cmd_drop, shell=True, check=True)
                 print(f"Deleted partition {date_str_last} for table {tbs}")
             else:
@@ -76,13 +107,13 @@ for i in range(8):
 
             # 检查是否存在要添加的分区
             check_add_exists = f"SELECT 1 FROM information_schema.partitions WHERE table_schema = '{dbs}' AND table_name = '{tbs}' AND partition_name = '{date_str_next}'"
-            cmd_check_add_exists = f"mysql -har0607.rwlb.singapore.rds.aliyuncs.com -uives -pCssl#123 -e \"{check_add_exists}\""
+            cmd_check_add_exists = f"mysql -h{db_host} -u{db_user} -p{db_pwd} -e \"{check_add_exists}\""
             result_add_exists = subprocess.run(cmd_check_add_exists, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
             if "1" not in result_add_exists.stdout.decode('utf-8'):
                 # 添加七天后的分区
                 sql_add = f'use {dbs};ALTER TABLE {tbs} ADD PARTITION (partition {date_str_next} values less than ({next_week_timestamp}))'
-                cmd_add = f"mysql -har0607.rwlb.singapore.rds.aliyuncs.com -uives -pCssl#123 -e '{sql_add}'"
+                cmd_add = f"mysql -h{db_host} -u{db_user} -p{db_pwd} -e '{sql_add}'"
                 subprocess.run(cmd_add, shell=True, check=True)
                 print(f"Added partition {date_str_next} for table {tbs}")
             else:
