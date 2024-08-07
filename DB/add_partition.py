@@ -1,7 +1,7 @@
 # /usr/bin/python3
 
 # Author        : Ives
-# Date          : 2024-07-05
+# Date          : 2024-08-07
 
 import datetime
 import subprocess
@@ -43,11 +43,13 @@ def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list):
 
         for dbs in db_list:
             for tbs in tables_list:
+                # 检查是否存在要删除的分区
                 check_drop_exists = f"SELECT 1 FROM information_schema.partitions WHERE table_schema = '{dbs}' AND table_name = '{tbs}' AND partition_name = '{date_str_last}'"
                 cmd_check_drop_exists = f"mysql -h{db_host} -u{db_user} -p{db_pwd} -e \"{check_drop_exists}\""
                 result_drop_exists = subprocess.run(cmd_check_drop_exists, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
                 if "1" in result_drop_exists.stdout.decode('utf-8'):
+                    # 删除30天前的分区
                     sql_drop = f'use {dbs};ALTER TABLE {tbs} DROP PARTITION {date_str_last}'
                     cmd_drop = f"mysql -h{db_host}  -u{db_user} -p{db_pwd} -e '{sql_drop}'"
                     subprocess.run(cmd_drop, shell=True, check=True)
@@ -55,11 +57,13 @@ def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list):
                 else:
                     print(f"Partition {date_str_last} does not exist for table {tbs}, skipping deletion")
 
+                # 检查是否存在要添加的分区
                 check_add_exists = f"SELECT 1 FROM information_schema.partitions WHERE table_schema = '{dbs}' AND table_name = '{tbs}' AND partition_name = '{date_str_next}'"
                 cmd_check_add_exists = f"mysql -h{db_host} -u{db_user} -p{db_pwd} -e \"{check_add_exists}\""
                 result_add_exists = subprocess.run(cmd_check_add_exists, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
                 if "1" not in result_add_exists.stdout.decode('utf-8'):
+                    # 添加七天后的分区
                     sql_add = f'use {dbs};ALTER TABLE {tbs} ADD PARTITION (partition {date_str_next} values less than ({next_week_timestamp}))'
                     cmd_add = f"mysql -h{db_host} -u{db_user} -p{db_pwd} -e '{sql_add}'"
                     subprocess.run(cmd_add, shell=True, check=True)
@@ -68,10 +72,8 @@ def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list):
                     print(f"Partition {date_str_next} already exists for table {tbs}, skipping addition")
 
 # 使用示例
-db_host = "ar0607.rwlb.singapore.rds.aliyuncs.com"
-db_user = "ives"
-db_pwd = "Cssl#123"
-db_list = ['tenant_1001']
+
+# 分区表列表
 tables_list = [
     'tab_financialchess',
     'tab_financialelectronic',
@@ -103,5 +105,20 @@ tables_list = [
     'tab_ordervideo',
     'tab_tenanttransfer'
 ]
+
+# 实例1
+db_host = "ar0607.rwlb.singapore.rds.aliyuncs.com"
+db_user = "ives"
+db_pwd = "uNv5h7QUkUe9!AiBEFNpDWF7Nf3L6j"
+db_list = ['tenant_1001']
+
+manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list)
+
+
+# 实例2
+db_host = "sit-tenat.rwlb.singapore.rds.aliyuncs.com"
+db_user = "sa"
+db_pwd = "g3AGKKc!8XbQiRzaW2upgNHHAz"
+db_list = ['tenant_2001','tenant_2002']
 
 manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list)
