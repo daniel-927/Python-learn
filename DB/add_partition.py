@@ -3,7 +3,7 @@
 #!/usr/bin/python3
 
 # Author        : Ives
-# Date          : 2024-08-31
+# Date          : 2024-09-12
 
 import datetime
 import subprocess
@@ -96,15 +96,15 @@ def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list):
 
                 if "1" in result_drop_exists_stdout:
                     # 删除30天前的分区
-                    sql_drop = f'use {dbs};ALTER TABLE {tbs} DROP PARTITION {date_str_last}'
+                    sql_drop = f'ALTER TABLE {dbs}.{tbs} DROP PARTITION {date_str_last}'
                     cmd_drop = f"mysql -h{db_host} -u{db_user} -p{db_pwd} -e '{sql_drop}'"
                     drop_stdout, drop_stderr = run_command(cmd_drop)
                     if drop_stderr:
-                        error_messages.append(f"Error deleting partition {date_str_last} for table {tbs}: {drop_stderr}")
+                        error_messages.append(f"Error deleting partition {date_str_last} for table {dbs}.{tbs}: {drop_stderr}")
                     else:
-                        delete_message.append(f"Deleted partition {date_str_last} for table {tbs}. Output: {drop_stdout}")
+                        delete_message.append(f"Deleted partition {date_str_last} for table {dbs}.{tbs}. Output: {drop_stdout}")
                 else:
-                    does_not_exist_message.append(f"Partition {date_str_last} does not exist for table {tbs}, skipping deletion")
+                    does_not_exist_message.append(f"Partition {date_str_last} does not exist for table {dbs}.{tbs}, skipping deletion")
 
                 # 检查是否存在要添加的分区
                 check_add_exists = f"SELECT 1 FROM information_schema.partitions WHERE table_schema = '{dbs}' AND table_name = '{tbs}' AND partition_name = '{date_str_next}'"
@@ -113,15 +113,15 @@ def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list):
 
                 if "1" not in result_add_exists_stdout:
                     # 添加七天后的分区
-                    sql_add = f'use {dbs};ALTER TABLE {tbs} ADD PARTITION (partition {date_str_next} values less than ({next_week_timestamp}))'
+                    sql_add = f'ALTER TABLE {dbs}.{tbs} ADD PARTITION (partition {date_str_next} values less than ({next_week_timestamp}))'
                     cmd_add = f"mysql -h{db_host} -u{db_user} -p{db_pwd} -e '{sql_add}'"
                     add_stdout, add_stderr = run_command(cmd_add)
                     if add_stderr:
-                        error_messages.append(f"Error adding partition {date_str_next} for table {tbs}: {add_stderr}")
+                        error_messages.append(f"Error adding partition {date_str_next} for table {}dbs.{tbs}: {add_stderr}")
                     else:
-                        add_messages.append(f"Added partition {date_str_next} for table {tbs}. Output: {add_stdout}")
+                        add_messages.append(f"Added partition {date_str_next} for table {dbs}.{tbs}. Output: {add_stdout}")
                 else:
-                    already_messages.append(f"Partition {date_str_next} already exists for table {tbs}, skipping addition")
+                    already_messages.append(f"Partition {date_str_next} already exists for table {dbs}.{tbs}, skipping addition")
 
     # 发送所有错误消息到 Telegram
     full_error_messages = "\n".join(error_messages)
@@ -175,7 +175,7 @@ manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list)
 #!/usr/bin/python3
 
 # Author        : Ives
-# Date          : 2024-08-31
+# Date          : 2024-09-12
 
 import datetime
 import pymysql
@@ -273,14 +273,14 @@ def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list):
                         result_drop_exists, _ = run_query(connection, check_drop_exists)
                         if result_drop_exists:
                             # 删除30天前的分区
-                            sql_drop = f'use {dbs};ALTER TABLE {tbs} DROP PARTITION {date_str_last}'
+                            sql_drop = f'ALTER TABLE {dbs}.{tbs} DROP PARTITION {date_str_last}'
                             try:
                                 run_query(connection, sql_drop)
-                                delete_message.append(f"Deleted partition {date_str_last} for table {tbs}.")
+                                delete_message.append(f"Deleted partition {date_str_last} for table {dbs}.{tbs}.")
                             except pymysql.MySQLError as e:
-                                error_messages.append(f"Error deleting partition {date_str_last} for table {tbs}: {e}")
+                                error_messages.append(f"Error deleting partition {date_str_last} for table {dbs}.{tbs}: {e}")
                         else:
-                            does_not_exist_message.append(f"Partition {date_str_last} does not exist for table {tbs}, skipping deletion")
+                            does_not_exist_message.append(f"Partition {date_str_last} does not exist for table {dbs}.{tbs}, skipping deletion")
 
                         # 检查是否存在要添加的分区
                         check_add_exists = f"SELECT 1 FROM information_schema.partitions WHERE table_schema = '{dbs}' AND table_name = '{tbs}' AND partition_name = '{date_str_next}'"
@@ -288,14 +288,14 @@ def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list):
 
                         if not result_add_exists:
                             # 添加七天后的分区
-                            sql_add = f'use {dbs};ALTER TABLE {tbs} ADD PARTITION (partition {date_str_next} values less than ({next_week_timestamp}))'
+                            sql_add = f'ALTER TABLE {dbs}.{tbs} ADD PARTITION (partition {date_str_next} values less than ({next_week_timestamp}))'
                             try:
                                 run_query(connection, sql_add)
-                                add_messages.append(f"Added partition {date_str_next} for table {tbs}.")
+                                add_messages.append(f"Added partition {date_str_next} for table {dbs}.{tbs}.")
                             except pymysql.MySQLError as e:
-                                error_messages.append(f"Error adding partition {date_str_next} for table {tbs}: {e}")
+                                error_messages.append(f"Error adding partition {date_str_next} for table {dbs}.{tbs}: {e}")
                         else:
-                            already_messages.append(f"Partition {date_str_next} already exists for table {tbs}, skipping addition")
+                            already_messages.append(f"Partition {date_str_next} already exists for table {dbs}.{tbs}, skipping addition")
 
                     except pymysql.MySQLError as e:
                         error_messages.append(f"Error executing query: {e}")
@@ -314,11 +314,11 @@ def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list):
     send_telegram_message(full_error_messages)
     send_telegram_message(full_add_messages)
     send_telegram_message(full_delete_message)
-    send_telegram_message(full_does_not_exist_message)
-    send_telegram_message(full_already_messages)
+    #send_telegram_message(full_does_not_exist_message)
+    #send_telegram_message(full_already_messages)
 
     # 标注环境实例名称
-    topic = f"saas系统分区调整情况如上,如无内容则表示无需调整"
+    topic = f"sass系统分区调整情况如上,如无内容则表示无需调整"
     send_telegram_message(topic)
 
 # 使用示例
@@ -344,6 +344,6 @@ tables_list = [
 db_host = "pc-gs5lkq94snv8uc4dc.rwlb.singapore.rds.aliyuncs.com"
 db_user = "polar_root"
 db_pwd = "HBho3ePONjjPn9H3CXWi"
-db_list = ['tenat']
+db_list = ['tenant_9900','tenant_9901']
 
 manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list)
