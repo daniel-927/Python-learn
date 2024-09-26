@@ -70,7 +70,7 @@ def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list):
         # 下周时间
         next_week = current_date + datetime.timedelta(days=7 + i)
         # 30天前的时间
-        last_30_days = current_date - datetime.timedelta(days=30 - i)
+        last_30_days = current_date - datetime.timedelta(days=37 - i)
         # 凌晨1点 
         target_time = datetime.time(1, 0, 0)
         # 把时间组合
@@ -84,6 +84,8 @@ def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list):
         year_str_next = str(next_week.year)
         month_str_next = str(next_week.month).zfill(2)
         day_str_next = str(next_week.day).zfill(2)
+
+        # 拼接前缀“p”
         date_str_next = "p" + year_str_next + month_str_next + day_str_next
 
         # 分别提取 last_30_days 的年份、月份和日期，并将它们转换为字符串。如果月份或日期是单数字，则用 zfill(2) 填充前导零以确保两位数格式。
