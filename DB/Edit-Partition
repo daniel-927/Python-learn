@@ -47,7 +47,7 @@ def run_command(cmd):
     result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return result.stdout.decode('utf-8'), result.stderr.decode('utf-8')
 
-def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list):
+def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list, topic):
     """
     管理数据库分区的函数。
 
@@ -144,8 +144,7 @@ def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list):
     send_telegram_message(full_does_not_exist_message)
     send_telegram_message(full_already_messages)
 
-     # 标注环境实例名称
-    topic = f"saas系统分区调整情况如上,如无内容则表示无需调整"
+     # 标注环境实例
     send_telegram_message(topic)
 
 
@@ -177,27 +176,23 @@ tables_list = [
 ]
 
 # 实例1
+topic = f"生产--saas系统分区调整情况如上,如无内容则表示无需调整"
 db_host = "pc-gs5lkq94snv8uc4dc.rwlb.singapore.rds.aliyuncs.com"
 db_user = "polar_root"
 db_pwd = "HBho3ePONjjPn9H3CXWi"
 db_list = ['tenant_9900','tenant_9901']
 
-manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list)
+manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list, topic)
 
 
 
 
 ###  pymysql 实现版
 
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+#!/usr/bin/python3
 
 # Author        : Ives
 # Date          : 2024-09-12
-
-' 分区表管理 '
-
-__author__ = 'Ives'
 
 import datetime
 import pymysql
@@ -212,11 +207,12 @@ CHAT_ID = '-4578699157'
 def split_message(message, max_length=4096):
     return [message[i:i + max_length] for i in range(0, len(message), max_length)]
 
+
 # 发送 Telegram 消息
 def send_telegram_message(message):
     if not message:
         return  # 不发送空消息
-    
+
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
         'chat_id': CHAT_ID,
@@ -230,13 +226,15 @@ def send_telegram_message(message):
         if response.status_code != 200:
             print(f"Failed to send message to Telegram: {response.status_code}, {response.text}")
 
+
 # 执行 SQL 查询并返回结果
-def run_query(connection, query): 
+def run_query(connection, query):
     with connection.cursor() as cursor:
         cursor.execute(query)
         return cursor.fetchall(), cursor._last_executed
 
-def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list):
+
+def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list,topic):
     """
     管理数据库分区的函数。
 
@@ -258,12 +256,12 @@ def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list):
     connection = pymysql.connect(host=db_host, user=db_user, password=db_pwd)
 
     try:
-        for i in range(8): # 7天
+        for i in range(8):  # 7天
 
             # 下周时间
             next_week = current_date + datetime.timedelta(days=7 + i)
             # 30天前的时间
-            last_30_days = current_date - datetime.timedelta(days=30 - i)
+            last_30_days = current_date - datetime.timedelta(days=37 - i)
             # 凌晨1点 
             target_time = datetime.time(1, 0, 0)
             # 把时间组合
@@ -272,7 +270,7 @@ def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list):
             # 转成毫秒
             next_week_timestamp = int(next_target_datetime.timestamp() * 1000)
             last_30_days_timestamp = int(last_target_datetime.timestamp() * 1000)
-            
+
             # 分别提取 next_week 的年份、月份和日期，并将它们转换为字符串。如果月份或日期是单数字，则用 zfill(2) 填充前导零以确保两位数格式。
             year_str_next = str(next_week.year)
             month_str_next = str(next_week.month).zfill(2)
@@ -283,7 +281,7 @@ def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list):
             year_str_last = str(last_30_days.year)
             month_str_last = str(last_30_days.month).zfill(2)
             day_str_last = str(last_30_days.day).zfill(2)
-            
+
             # 拼接前缀“p”
             date_str_last = "p" + year_str_last + month_str_last + day_str_last
 
@@ -300,9 +298,11 @@ def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list):
                                 run_query(connection, sql_drop)
                                 delete_message.append(f"Deleted partition {date_str_last} for table {dbs}.{tbs}.")
                             except pymysql.MySQLError as e:
-                                error_messages.append(f"Error deleting partition {date_str_last} for table {dbs}.{tbs}: {e}")
+                                error_messages.append(
+                                    f"Error deleting partition {date_str_last} for table {dbs}.{tbs}: {e}")
                         else:
-                            does_not_exist_message.append(f"Partition {date_str_last} does not exist for table {dbs}.{tbs}, skipping deletion")
+                            does_not_exist_message.append(
+                                f"Partition {date_str_last} does not exist for table {dbs}.{tbs}, skipping deletion")
 
                         # 检查是否存在要添加的分区
                         check_add_exists = f"SELECT 1 FROM information_schema.partitions WHERE table_schema = '{dbs}' AND table_name = '{tbs}' AND partition_name = '{date_str_next}'"
@@ -315,9 +315,11 @@ def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list):
                                 run_query(connection, sql_add)
                                 add_messages.append(f"Added partition {date_str_next} for table {dbs}.{tbs}.")
                             except pymysql.MySQLError as e:
-                                error_messages.append(f"Error adding partition {date_str_next} for table {dbs}.{tbs}: {e}")
+                                error_messages.append(
+                                    f"Error adding partition {date_str_next} for table {dbs}.{tbs}: {e}")
                         else:
-                            already_messages.append(f"Partition {date_str_next} already exists for table {dbs}.{tbs}, skipping addition")
+                            already_messages.append(
+                                f"Partition {date_str_next} already exists for table {dbs}.{tbs}, skipping addition")
 
                     except pymysql.MySQLError as e:
                         error_messages.append(f"Error executing query: {e}")
@@ -339,9 +341,9 @@ def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list):
     #send_telegram_message(full_does_not_exist_message)
     #send_telegram_message(full_already_messages)
 
-    # 标注环境实例名称
-    topic = f"sass系统分区调整情况如上,如无内容则表示无需调整"
+    # 标注环境实例
     send_telegram_message(topic)
+
 
 # 使用示例
 
@@ -370,12 +372,54 @@ tables_list = [
     'tab_orderlottery_wingo'
 ]
 
-# 实例1
-db_host = "pc-gs5lkq94snv8uc4dc.rwlb.singapore.rds.aliyuncs.com"
+
+# 印度1
+topic = f"生产(印度1)--saas系统分区调整情况如上,如无内容则表示无需调整"
+db_host = "pc-gs5ig8zqt3bni2e18.rwlb.singapore.rds.aliyuncs.com"
 db_user = "polar_root"
 db_pwd = "HBho3ePONjjPn9H3CXWi"
-db_list = ['tenant_9900','tenant_9901']
+db_list = [
+    'tenant_9900',
+    'tenant_9901',
+    'tenant_9902',
+    'tenant_9903',
+    'tenant_9904',
+    'tenant_9905',
+    'tenant_9906',
+    'tenant_9907',
+    'tenant_9908',
+    'tenant_9909',
+    'tenant_9910',
+    'tenant_1030',
+    'tenant_1017',
+    'tenant_1006',
+    'tenant_1008',
+    'tenant_1027',
+    'tenant_1029'
+]
 
-manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list)
+manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list,topic)
 
 
+# 南美
+topic = f"生产(南美)--saas系统分区调整情况如上,如无内容则表示无需调整"
+db_host = "pc-gs5s8dc1712fyb97x.rwlb.singapore.rds.aliyuncs.com"
+db_user = "polar_root"
+db_pwd = "sN3DcLa3MDVW3Y2g9WDA"
+db_list = [
+    'tenant_1003'
+]
+
+manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list,topic)
+
+
+# 东南亚
+topic = f"生产(东南亚)--saas系统分区调整情况如上,如无内容则表示无需调整"
+db_host = "pc-gs565fd2268h22h9u.rwlb.singapore.rds.aliyuncs.com"
+db_user = "polar_root"
+db_pwd = "ZtagW7NTd3NZYaLFfMbZ"
+db_list = [
+    'tenant_1036'
+]
+
+manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list,topic)
