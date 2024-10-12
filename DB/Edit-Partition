@@ -234,7 +234,7 @@ def run_query(connection, query):
         return cursor.fetchall(), cursor._last_executed
 
 
-def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list,topic):
+def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list, topic):
     """
     管理数据库分区的函数。
 
@@ -255,74 +255,86 @@ def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list,topic):
     # 打开数据库连接
     connection = pymysql.connect(host=db_host, user=db_user, password=db_pwd)
 
+    def del_partitions(count_num, db_list, tables_list):
+        # 30天前的时间
+        last_30_days = current_date - datetime.timedelta(days=30 + count_num)
+        # 凌晨1点
+        target_time = datetime.time(1, 0, 0)
+        # 把时间组合
+        last_target_datetime = datetime.datetime.combine(last_30_days.date(), target_time)
+        # 转成毫秒
+        last_30_days_timestamp = int(last_target_datetime.timestamp() * 1000)
+        # 分别提取 last_30_days 的年份、月份和日期，并将它们转换为字符串。如果月份或日期是单数字，则用 zfill(2) 填充前导零以确保两位数格式。
+        year_str_last = str(last_30_days.year)
+        month_str_last = str(last_30_days.month).zfill(2)
+        day_str_last = str(last_30_days.day).zfill(2)
+
+        # 拼接前缀“p”
+        date_str_last = "p" + year_str_last + month_str_last + day_str_last
+        for dbs in db_list:
+            for tbs in tables_list:
+                # 检查是否存在要删除的分区
+                check_drop_exists = f"SELECT 1 FROM information_schema.partitions WHERE table_schema = '{dbs}' AND table_name = '{tbs}' AND partition_name = '{date_str_last}'"
+                try:
+                    result_drop_exists, _ = run_query(connection, check_drop_exists)
+                    if result_drop_exists:
+                        # 删除30天前的分区
+                        sql_drop = f'ALTER TABLE {dbs}.{tbs} DROP PARTITION {date_str_last}'
+                        try:
+                            run_query(connection, sql_drop)
+                            delete_message.append(f"Deleted partition {date_str_last} for table {dbs}.{tbs}.")
+                        except pymysql.MySQLError as e:
+                            error_messages.append(
+                                f"Error deleting partition {date_str_last} for table {dbs}.{tbs}: {e}")
+                    else:
+                        does_not_exist_message.append(
+                            f"Partition {date_str_last} does not exist for table {dbs}.{tbs}, skipping deletion")
+                except pymysql.MySQLError as e:
+                    error_messages.append(f"Error executing query: {e}")
+
+    def add_partitions(count_num, db_list, tables_list):
+        # 下周时间
+        next_week = current_date + datetime.timedelta(days=7 + count_num)
+        # 凌晨1点
+        target_time = datetime.time(1, 0, 0)
+        # 把时间组合
+        next_target_datetime = datetime.datetime.combine(next_week.date(), target_time)
+        # 转成毫秒
+        next_week_timestamp = int(next_target_datetime.timestamp() * 1000)
+        # 分别提取 next_week 的年份、月份和日期，并将它们转换为字符串。如果月份或日期是单数字，则用 zfill(2) 填充前导零以确保两位数格式。
+        year_str_next = str(next_week.year)
+        month_str_next = str(next_week.month).zfill(2)
+        day_str_next = str(next_week.day).zfill(2)
+
+        # 拼接前缀“p”
+        date_str_next = "p" + year_str_next + month_str_next + day_str_next
+        for dbs in db_list:
+            for tbs in tables_list:
+                # 检查是否存在要添加的分区
+                check_add_exists = f"SELECT 1 FROM information_schema.partitions WHERE table_schema = '{dbs}' AND table_name = '{tbs}' AND partition_name = '{date_str_next}'"
+                result_add_exists, _ = run_query(connection, check_add_exists)
+                try:
+                    if not result_add_exists:
+                        # 添加七天后的分区
+                        sql_add = f'ALTER TABLE {dbs}.{tbs} ADD PARTITION (partition {date_str_next} values less than ({next_week_timestamp}))'
+                        try:
+                            run_query(connection, sql_add)
+                            add_messages.append(f"Added partition {date_str_next} for table {dbs}.{tbs}.")
+                        except pymysql.MySQLError as e:
+                            error_messages.append(
+                                f"Error adding partition {date_str_next} for table {dbs}.{tbs}: {e}")
+                    else:
+                        already_messages.append(
+                            f"Partition {date_str_next} already exists for table {dbs}.{tbs}, skipping addition")
+                except pymysql.MySQLError as e:
+                    error_messages.append(f"Error executing query: {e}")
+
+
+
     try:
-        for i in range(8):  # 7天
-
-            # 下周时间
-            next_week = current_date + datetime.timedelta(days=7 + i)
-            # 30天前的时间
-            last_30_days = current_date - datetime.timedelta(days=37 - i)
-            # 凌晨1点 
-            target_time = datetime.time(1, 0, 0)
-            # 把时间组合
-            next_target_datetime = datetime.datetime.combine(next_week.date(), target_time)
-            last_target_datetime = datetime.datetime.combine(last_30_days.date(), target_time)
-            # 转成毫秒
-            next_week_timestamp = int(next_target_datetime.timestamp() * 1000)
-            last_30_days_timestamp = int(last_target_datetime.timestamp() * 1000)
-
-            # 分别提取 next_week 的年份、月份和日期，并将它们转换为字符串。如果月份或日期是单数字，则用 zfill(2) 填充前导零以确保两位数格式。
-            year_str_next = str(next_week.year)
-            month_str_next = str(next_week.month).zfill(2)
-            day_str_next = str(next_week.day).zfill(2)
-            date_str_next = "p" + year_str_next + month_str_next + day_str_next
-
-            # 分别提取 last_30_days 的年份、月份和日期，并将它们转换为字符串。如果月份或日期是单数字，则用 zfill(2) 填充前导零以确保两位数格式。
-            year_str_last = str(last_30_days.year)
-            month_str_last = str(last_30_days.month).zfill(2)
-            day_str_last = str(last_30_days.day).zfill(2)
-
-            # 拼接前缀“p”
-            date_str_last = "p" + year_str_last + month_str_last + day_str_last
-
-            for dbs in db_list:
-                for tbs in tables_list:
-                    # 检查是否存在要删除的分区
-                    check_drop_exists = f"SELECT 1 FROM information_schema.partitions WHERE table_schema = '{dbs}' AND table_name = '{tbs}' AND partition_name = '{date_str_last}'"
-                    try:
-                        result_drop_exists, _ = run_query(connection, check_drop_exists)
-                        if result_drop_exists:
-                            # 删除30天前的分区
-                            sql_drop = f'ALTER TABLE {dbs}.{tbs} DROP PARTITION {date_str_last}'
-                            try:
-                                run_query(connection, sql_drop)
-                                delete_message.append(f"Deleted partition {date_str_last} for table {dbs}.{tbs}.")
-                            except pymysql.MySQLError as e:
-                                error_messages.append(
-                                    f"Error deleting partition {date_str_last} for table {dbs}.{tbs}: {e}")
-                        else:
-                            does_not_exist_message.append(
-                                f"Partition {date_str_last} does not exist for table {dbs}.{tbs}, skipping deletion")
-
-                        # 检查是否存在要添加的分区
-                        check_add_exists = f"SELECT 1 FROM information_schema.partitions WHERE table_schema = '{dbs}' AND table_name = '{tbs}' AND partition_name = '{date_str_next}'"
-                        result_add_exists, _ = run_query(connection, check_add_exists)
-
-                        if not result_add_exists:
-                            # 添加七天后的分区
-                            sql_add = f'ALTER TABLE {dbs}.{tbs} ADD PARTITION (partition {date_str_next} values less than ({next_week_timestamp}))'
-                            try:
-                                run_query(connection, sql_add)
-                                add_messages.append(f"Added partition {date_str_next} for table {dbs}.{tbs}.")
-                            except pymysql.MySQLError as e:
-                                error_messages.append(
-                                    f"Error adding partition {date_str_next} for table {dbs}.{tbs}: {e}")
-                        else:
-                            already_messages.append(
-                                f"Partition {date_str_next} already exists for table {dbs}.{tbs}, skipping addition")
-
-                    except pymysql.MySQLError as e:
-                        error_messages.append(f"Error executing query: {e}")
+        for count_num in range(8): # 7天
+            del_partitions(count_num, db_list, tables_list)
+            add_partitions(count_num, db_list, tables_list)
     except Exception as e:
         send_telegram_message(f"分区脚本执行报错: {e}")
     finally:
@@ -398,7 +410,7 @@ db_list = [
     'tenant_1029'
 ]
 
-manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list,topic)
+manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list, topic)
 
 
 # 南美
@@ -407,10 +419,14 @@ db_host = "pc-gs5s8dc1712fyb97x.rwlb.singapore.rds.aliyuncs.com"
 db_user = "polar_root"
 db_pwd = "sN3DcLa3MDVW3Y2g9WDA"
 db_list = [
-    'tenant_1003'
+    'tenant_1002',
+    'tenant_1003',
+    'tenant_1019',
+    'tenant_1038',
+    'tenant_1040'
 ]
 
-manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list,topic)
+manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list, topic)
 
 
 # 东南亚
@@ -419,7 +435,49 @@ db_host = "pc-gs565fd2268h22h9u.rwlb.singapore.rds.aliyuncs.com"
 db_user = "polar_root"
 db_pwd = "ZtagW7NTd3NZYaLFfMbZ"
 db_list = [
-    'tenant_1036'
+    'tenant_1036',
+    'tenant_1039'
+]
+
+manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list, topic)
+
+
+
+# 印度2
+topic = f"生产(印度2)--saas系统分区调整情况如上,如无内容则表示无需调整"
+db_host = "pc-gs59qv41fbw5pg2m8.rwlb.singapore.rds.aliyuncs.com"
+db_user = "polar_root"
+db_pwd = "Yn3z0oQW6mjHWNkbto4j"
+db_list = [
+    'tenant_1012',
+    'tenant_1025',
+    'tenant_1016',
+    'tenant_1063',
+    'tenant_1064',
+    'tenant_1065'
+]
+
+manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list, topic)
+
+
+
+
+# 印度3
+topic = f"生产(印度3)--saas系统分区调整情况如上,如无内容则表示无需调整"
+db_host = "pc-gs5waf5yi191sz074.rwlb.singapore.rds.aliyuncs.com"
+db_user = "polar_root"
+db_pwd = "QDGF30HrbXmq3U8vijiq"
+db_list = [
+    'tenant_1066',
+    'tenant_1011',
+    'tenant_1018',
+    'tenant_1059',
+    'tenant_1001',
+    'tenant_1031',
+    'tenant_1062',
+    'tenant_1014',
+    'tenant_1058',
+    'tenant_1022'
 ]
 
 manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list, topic)
