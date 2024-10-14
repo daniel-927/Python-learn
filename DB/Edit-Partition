@@ -245,7 +245,11 @@ def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list, topic):
     db_list (list): 库列表
     tables_list (list): 分区表列表
     """
+
+    # 定义当前时间
     current_date = datetime.datetime.now()
+
+    # 告警消息队列
     error_messages = []
     add_messages = []
     delete_message = []
@@ -271,6 +275,7 @@ def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list, topic):
 
         # 拼接前缀“p”
         date_str_last = "p" + year_str_last + month_str_last + day_str_last
+
         for dbs in db_list:
             for tbs in tables_list:
                 # 检查是否存在要删除的分区
@@ -308,6 +313,7 @@ def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list, topic):
 
         # 拼接前缀“p”
         date_str_next = "p" + year_str_next + month_str_next + day_str_next
+
         for dbs in db_list:
             for tbs in tables_list:
                 # 检查是否存在要添加的分区
@@ -330,10 +336,11 @@ def manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list, topic):
                     error_messages.append(f"Error executing query: {e}")
 
 
-
+    # 执行分区管理
     try:
         for count_num in range(8): # 7天
             del_partitions(count_num, db_list, tables_list)
+        for count_num in range(8): # 7天
             add_partitions(count_num, db_list, tables_list)
     except Exception as e:
         send_telegram_message(f"分区脚本执行报错: {e}")
@@ -435,6 +442,17 @@ db_host = "pc-gs565fd2268h22h9u.rwlb.singapore.rds.aliyuncs.com"
 db_user = "polar_root"
 db_pwd = "ZtagW7NTd3NZYaLFfMbZ"
 db_list = [
+    'tenant_1046',
+    'tenant_1034',
+    'tenant_1043',
+    'tenant_1035',
+    'tenant_1042',
+    'tenant_1052',
+    'tenant_1057',
+    'tenant_1045',
+    'tenant_1026',
+    'tenant_1044',
+    'tenant_1033',
     'tenant_1036',
     'tenant_1039'
 ]
@@ -481,3 +499,5 @@ db_list = [
 ]
 
 manage_db_partitions(db_host, db_user, db_pwd, db_list, tables_list, topic)
+
+
