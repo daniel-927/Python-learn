@@ -9,13 +9,14 @@ import requests
 
 
 class DBPartitionManager:
-    def __init__(self, bot_token, chat_id, add_day, del_day, edit_num, interval_days):
+    def __init__(self, bot_token, chat_id, add_day, del_day, edit_num, interval_days, table_list):
         self.bot_token = bot_token
         self.chat_id = chat_id
         self.add_day = add_day
         self.del_day = del_day
         self.edit_num = edit_num
         self.interval_days = interval_days
+        self.table_list = table_list
 
     def send_telegram_message(self, message):
         if not message:
@@ -67,7 +68,7 @@ class DBPartitionManager:
         # 打开数据库连接
         connection = pymysql.connect(host=db_host, user=db_user, password=db_pwd)
 
-        def del_partitions(count_num, db_list, table_list):
+        def del_partitions(count_num, db_list):
             # 30天前的时间
             last_30_days = current_date - datetime.timedelta(days=self.del_day + count_num)
             # 凌晨1点
@@ -85,7 +86,7 @@ class DBPartitionManager:
             date_str_last = "p" + year_str_last + month_str_last + day_str_last
 
             for dbs in db_list:
-                for tbs in table_list:
+                for tbs in self.table_list:
                     # 检查是否存在要删除的分区
                     check_drop_exists = f"SELECT 1 FROM information_schema.partitions WHERE table_schema = '{dbs}' AND table_name = '{tbs}' AND partition_name = '{date_str_last}'"
                     try:
@@ -105,7 +106,7 @@ class DBPartitionManager:
                     except pymysql.MySQLError as e:
                         error_messages.append(f"Error executing query: {e}")
 
-        def add_partitions(count_num, db_list, table_list):
+        def add_partitions(count_num, db_list):
             # 下周时间
             next_week = current_date + datetime.timedelta(days=self.add_day + (count_num * self.interval_days))
             # 凌晨1点
@@ -123,7 +124,7 @@ class DBPartitionManager:
             date_str_next = "p" + year_str_next + month_str_next + day_str_next
 
             for dbs in db_list:
-                for tbs in table_list:
+                for tbs in self.table_list:
                     # 检查是否存在要添加的分区
                     check_add_exists = f"SELECT 1 FROM information_schema.partitions WHERE table_schema = '{dbs}' AND table_name = '{tbs}' AND partition_name = '{date_str_next}'"
                     result_add_exists, _ = self.run_query(connection, check_add_exists)
@@ -146,9 +147,8 @@ class DBPartitionManager:
         # 执行分区管理
         try:
             for count_num in range(self.edit_num):  # 操作分区个数
-                del_partitions(count_num, db_list, table_list)
-            for count_num in range(self.edit_num):  # 操作分区个数
-                add_partitions(count_num, db_list, table_list)
+                del_partitions(count_num, db_list)
+                add_partitions(count_num, db_list)
         except Exception as e:
             self.send_telegram_message(f"分区脚本执行报错: {e}")
         finally:
