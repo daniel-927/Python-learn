@@ -67,9 +67,9 @@ class DBPartitionManager:
         # 打开数据库连接
         connection = pymysql.connect(host=db_host, user=db_user, password=db_pwd)
 
-        def del_partitions(count_num, db_list, table_list, del_day):
+        def del_partitions(count_num, db_list, table_list):
             # 30天前的时间
-            last_30_days = current_date - datetime.timedelta(days=del_day + count_num)
+            last_30_days = current_date - datetime.timedelta(days=self.del_day + count_num)
             # 凌晨1点
             target_time = datetime.time(1, 0, 0)
             # 把时间组合
@@ -105,9 +105,9 @@ class DBPartitionManager:
                     except pymysql.MySQLError as e:
                         error_messages.append(f"Error executing query: {e}")
 
-        def add_partitions(count_num, db_list, table_list, add_day):
+        def add_partitions(count_num, db_list, table_list):
             # 下周时间
-            next_week = current_date + datetime.timedelta(days=add_day + (count_num * self.interval_days))
+            next_week = current_date + datetime.timedelta(days=self.add_day + (count_num * self.interval_days))
             # 凌晨1点
             target_time = datetime.time(1, 0, 0)
             # 把时间组合
@@ -146,9 +146,9 @@ class DBPartitionManager:
         # 执行分区管理
         try:
             for count_num in range(self.edit_num):  # 操作分区个数
-                del_partitions(count_num, db_list, table_list, self.del_day)
+                del_partitions(count_num, db_list, table_list)
             for count_num in range(self.edit_num):  # 操作分区个数
-                add_partitions(count_num, db_list, table_list, self.add_day)
+                add_partitions(count_num, db_list, table_list)
         except Exception as e:
             self.send_telegram_message(f"分区脚本执行报错: {e}")
         finally:
