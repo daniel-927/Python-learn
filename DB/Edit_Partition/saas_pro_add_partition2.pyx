@@ -9,12 +9,13 @@ import requests
 
 
 class DBPartitionManager:
-    def __init__(self, bot_token, chat_id, add_day, del_day, edit_day):
+    def __init__(self, bot_token, chat_id, add_day, del_day, edit_num, interval_days):
         self.bot_token = bot_token
         self.chat_id = chat_id
         self.add_day = add_day
         self.del_day = del_day
-        self.edit_day = edit_day
+        self.edit_num = edit_num
+        self.interval_days = interval_days
 
     def send_telegram_message(self, message):
         if not message:
@@ -106,7 +107,7 @@ class DBPartitionManager:
 
         def add_partitions(count_num, db_list, table_list, add_day):
             # 下周时间
-            next_week = current_date + datetime.timedelta(days=add_day + count_num)
+            next_week = current_date + datetime.timedelta(days=add_day + (count_num * self.interval_days))
             # 凌晨1点
             target_time = datetime.time(1, 0, 0)
             # 把时间组合
@@ -144,9 +145,9 @@ class DBPartitionManager:
 
         # 执行分区管理
         try:
-            for count_num in range(self.edit_day):  # 操作分区个数
+            for count_num in range(self.edit_num):  # 操作分区个数
                 del_partitions(count_num, db_list, table_list, self.del_day)
-            for count_num in range(self.edit_day):  # 操作分区个数
+            for count_num in range(self.edit_num):  # 操作分区个数
                 add_partitions(count_num, db_list, table_list, self.add_day)
         except Exception as e:
             self.send_telegram_message(f"分区脚本执行报错: {e}")
