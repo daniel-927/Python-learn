@@ -12,12 +12,13 @@ def main():
     bot_token = "6327237666:AAEeH1FVThAdnBeYGBkpfWG7HfLy4Jzl_8w"  # 替换为实际的 Bot Token
     chat_id = "-4578699157"      # 替换为实际的 Chat ID
     # 分区管理参数
-    add_day  = 7    # 添加7天后的分区
-    del_day  = 30   # 删除30天前的分区
-    edit_day = 8    # 添加或删除分区个数 8等于7个
+    add_day  = 7       # 添加7天后的分区
+    del_day  = 30      # 删除30天前的分区
+    edit_num = 8       # 添加或删除分区个数 8等于7个
+    interval_days = 1  # 间隔天数
 
     # 实例化，并传递公共参数
-    notifier = DBPartitionManager(bot_token, chat_id, add_day, del_day, edit_day)
+    notifier = DBPartitionManager(bot_token, chat_id, add_day, del_day, edit_num, interval_days)
 
 
 
@@ -176,6 +177,8 @@ def main():
     ]
 
     notifier.manage_db_partitions(db_host, db_user, db_pwd, db_list, table_list, topic)
+
+
 
 
 
