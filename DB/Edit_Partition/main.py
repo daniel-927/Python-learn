@@ -11,16 +11,12 @@ def main():
     # telegram 配置
     bot_token = "6327237666:AAEeH1FVThAdnBeYGBkpfWG7HfLy4Jzl_8w"  # 替换为实际的 Bot Token
     chat_id = "-4578699157"      # 替换为实际的 Chat ID
+    
     # 分区管理参数
     add_day  = 7       # 添加7天后的分区
     del_day  = 30      # 删除30天前的分区
     edit_num = 8       # 添加或删除分区个数 8等于7个
     interval_days = 1  # 间隔天数
-
-    # 实例化，并传递公共参数
-    notifier = DBPartitionManager(bot_token, chat_id, add_day, del_day, edit_num, interval_days)
-
-
 
     # 分区表列表
     table_list = [
@@ -46,6 +42,13 @@ def main():
         'tab_orderlottery_trxwingo',
         'tab_orderlottery_wingo'
     ]
+
+    # 实例化，并传递公共参数
+    notifier = DBPartitionManager(bot_token, chat_id, add_day, del_day, edit_num, interval_days, table_list)
+
+
+
+
 
     # 印度1
     topic = f"生产(印度1)--saas系统分区调整情况如上,如无内容则表示无需调整"
